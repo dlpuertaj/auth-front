@@ -38,11 +38,9 @@ function App() {
        })
        .then(response => {
           console.log("Login Successful", response.data);
-          alert(response.data.message);
         })
        .catch(error => {
           console.error("Login Failed", error.response ? error.response.data : error.message);
-          alert("Login failed. Please try again.");
         });
     }else{
        axios.post(`http://localhost:8080${endpoint}`, requestData, {headers})
@@ -50,16 +48,13 @@ function App() {
         const apiResponse = response.data;
         if (apiResponse.success) {
           console.log(`${isLoginForm ? 'Login' : 'Registration'} successful!`, apiResponse);
-          alert(apiResponse.message);
         } else {
           console.error(`${isLoginForm ? 'Login' : 'Registration'} failed:`, apiResponse.message);
-          alert(apiResponse.message);
         }
       })
       .catch((error) => {
         console.error('Error:', error);
         console.error(`${isLoginForm ? 'Login' : 'Registration'} failed:`, error.response ? error.response.data : error.message);
-        alert(`${isLoginForm ? 'Login' : 'Registration'} failed. Please try again.`);
       });
     }
    
