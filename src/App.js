@@ -19,17 +19,33 @@ function App() {
     console.log('Username:', username);
     console.log('Password:', password);
   
-    // Encode the username and password in Base64 for Basic Auth
     const authHeader = `Basic ${btoa(`${username}:${password}`)}`;
-  
-    // Determine the API endpoint based on the form mode
+    console.log('Authorization Header:', authHeader);
+    
     const endpoint = isLoginForm ? '/api/login' : `/api/register?username=${username}&password=${password}`;
 
     const requestData = isLoginForm ? null : {username, password};
-    const headers = isLoginForm ? {'Authorization': authHeader} : {'Content-Type': 'application/json'};
+    const headers = isLoginForm ? {'Authorization': authHeader} : {username:`${username}`,password: `${password}`,};
   
-    // Call the API
-    axios.post(`http://localhost:8080${endpoint}`, requestData, {headers})
+    
+    if(isLoginForm){
+       axios.get(`http://localhost:8080/api/protected-resource`, {
+        auth:{
+          username: username,
+          password:password
+        },
+        withCredentials: true
+       })
+       .then(response => {
+          console.log("Login Successful", response.data);
+          alert(response.data.message);
+        })
+       .catch(error => {
+          console.error("Login Failed", error.response ? error.response.data : error.message);
+          alert("Login failed. Please try again.");
+        });
+    }else{
+       axios.post(`http://localhost:8080${endpoint}`, requestData, {headers})
         .then((response) => {
         const apiResponse = response.data;
         if (apiResponse.success) {
@@ -45,6 +61,8 @@ function App() {
         console.error(`${isLoginForm ? 'Login' : 'Registration'} failed:`, error.response ? error.response.data : error.message);
         alert(`${isLoginForm ? 'Login' : 'Registration'} failed. Please try again.`);
       });
+    }
+   
   };
 
   return (
