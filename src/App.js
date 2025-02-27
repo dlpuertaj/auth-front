@@ -19,8 +19,6 @@ function LoginOrRegisterForm({ setUser }) {
     console.log("Username:", username);
     console.log("Password:", password);
 
-    const authHeader = `Basic ${btoa(`${username}:${password}`)}`;
-    console.log("Authorization Header:", authHeader);
 
     const endpoint = isLoginForm
       ? "/api/login"
@@ -38,9 +36,14 @@ function LoginOrRegisterForm({ setUser }) {
             password: password,
           },
           {withCredentials: true,});
-          setUser(username);
-          navigate("/dashboard");
-        console.log("Login Successful", response.data);
+          if(response.status === 200){
+            setUser(username);
+            navigate("/dashboard");
+            console.log("Login Successful", response.data);
+          }else{
+            console.error("Login Failed",response.data);
+          }
+         
       }catch(error){
         console.error("Login Failed",error.response ? error.response.data : error.message);
       }
@@ -52,7 +55,7 @@ function LoginOrRegisterForm({ setUser }) {
           if (apiResponse.success) {
             console.log("Registration successful!", apiResponse);
           } else {
-            console.error("Registration", apiResponse.message);
+            console.error("Registration Failed", apiResponse.message);
           }
         })
         .catch((error) => {
