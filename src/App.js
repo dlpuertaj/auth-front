@@ -4,11 +4,15 @@ import axios from "axios";
 import "./App.css";
 
 function LoginOrRegisterForm({ setUser }) {
+  
+  const BASE_URL = "http://localhost:8080";
+  const LOGIN_ENDPOINT = "/api/login";
+  const REGISTER_ENDPOINT = "/api/register";
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-
   const [isLoginForm, setIsLoginForm] = useState(true);
+  const navigate = useNavigate();
 
   const toggleFormMode = () => {
     setIsLoginForm(!isLoginForm);
@@ -16,53 +20,26 @@ function LoginOrRegisterForm({ setUser }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevents page refresh
-    console.log("Username:", username);
-    console.log("Password:", password);
 
+    const endpoint = isLoginForm  ? LOGIN_ENDPOINT : REGISTER_ENDPOINT;
 
-    const endpoint = isLoginForm
-      ? "/api/login"
-      : `/api/register?username=${username}&password=${password}`;
-
-    const requestData = isLoginForm ? null : { username, password };
-    const headers = isLoginForm ? null : { username: `${username}`, password: `${password}` };
-
-    if (isLoginForm) {
-
-      try{
-        const response = await axios.post(`http://localhost:8080/api/login`,
-          {
-            username: username,
-            password: password,
-          },
-          {withCredentials: true,});
-          if(response.status === 200){
-            setUser(username);
-            navigate("/dashboard");
-            console.log("Login Successful", response.data);
-          }else{
-            console.error("Login Failed",response.data);
-          }
-         
-      }catch(error){
-        console.error("Login Failed",error.response ? error.response.data : error.message);
-      }
-
-    } else {
-      await axios.post(`http://localhost:8080${endpoint}`, requestData, { headers })
-        .then((response) => {
-          const apiResponse = response.data;
-          if (apiResponse.success) {
-            console.log("Registration successful!", apiResponse);
-          } else {
-            console.error("Registration Failed", apiResponse.message);
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          console.error("Registration filed:", error.response ? error.response.data : error.message
-          );
-        });
+    try{
+      const response = await axios.post(BASE_URL + endpoint,
+        {
+          username: username,
+          password: password,
+        },
+        {withCredentials: true,});
+        if(response.status === 200){
+          setUser(username);
+          navigate("/dashboard");
+          console.log((isLoginForm ? "Login" : "Registration") + "Successful", response.data);
+        }else{
+          console.error((isLoginForm ? "Login" : "Registration") + "Failed",response.data);
+        }
+        
+    }catch(error){
+      console.error((isLoginForm ? "Login" : "Registration") + "Failed", error.response ? error.response.data : error.message);
     }
   };
 
