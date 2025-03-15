@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./App.css";
+axios.defaults.withCredentials = true;
+
+const BASE_URL = "http://localhost:8080";
 
 function LoginOrRegisterForm({ setUser }) {
   
-  const BASE_URL = "http://localhost:8080";
   const LOGIN_ENDPOINT = "/api/login";
   const REGISTER_ENDPOINT = "/api/register";
   
@@ -29,14 +31,16 @@ function LoginOrRegisterForm({ setUser }) {
           username: username,
           password: password,
         },
-        {withCredentials: true,});
-        if(response.status === 200){
-          setUser(username);
-          navigate("/dashboard");
-          console.log((isLoginForm ? "Login" : "Registration") + "Successful", response.data);
-        }else{
-          console.error((isLoginForm ? "Login" : "Registration") + "Failed",response.data);
-        }
+        {withCredentials: true,}
+      );
+
+      if(response.status === 200){
+        setUser(username);
+        navigate(isLoginForm ? "/dashboard" : "/");
+        console.log((isLoginForm ? "Login" : "Registration") + "Successful", response.data);
+      }else{
+        console.error((isLoginForm ? "Login" : "Registration") + "Failed",response.data);
+      }
         
     }catch(error){
       console.error((isLoginForm ? "Login" : "Registration") + "Failed", error.response ? error.response.data : error.message);
@@ -78,32 +82,54 @@ function LoginOrRegisterForm({ setUser }) {
     </div>
   );
 }
+
 function Dashboard({ user, handleLogout }) {
-  return user ? (
+  
+  const [sessionStatus, setSessionStatus] = useState('Checking session...');
+  const [sessionExpiry, setSessionExpiry] = useState(null);
+  
+  const checkSession = async () => {
+    try{
+
+      const response = await axios.get(BASE_URL + "/api/check-session", {
+        withCredentials: true,
+      });
+
+      if (response.status === 200) {
+        setSessionStatus(response.data);
+        
+        // Extract expiration timestamp from the response
+        const expiryMatch = response.data.match(/Expires at: (\d+)/);
+        if (expiryMatch) {
+          setSessionExpiry(new Date(parseInt(expiryMatch[1])));
+        }
+      }
+
+    }catch(error){
+      console.error("Session check failed:", error.message);
+    }
+  };
+
+  useEffect(() =>{
+    checkSession();
+  }, []);
+
+  return (
     <div>
-      <h1>Welcome to the Dashboard, {user}!</h1>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
-  ) : (
-    <Navigate to="/" />
+    <h1>Dashboard</h1>
+    <p>Session Status: {sessionStatus}</p>
+    {sessionExpiry && <p>Session expires at: {sessionExpiry.toLocaleString()}</p>}
+    <button onClick={checkSession}>Check Session Again</button>
+    <button onClick={handleLogout}>Logout</button>
+  </div>
   );
 }
 function App() {
   const [user, setUser] = useState(null);
 
-  useEffect(() =>{
-    axios.get("http://localhost:8080/api/me",{withCredentials: true})
-      .then((response) => {
-        console.log("User Data:", response.data);
-        setUser(response.data.username);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  }, []);
-
   const handleLogout = async () => {
-    await axios.post("http://localhost:8080/api/logout", {}, { withCredentials: true })
+    await axios.post("http://localhost:8080/api/logout",{ 
+      withCredentials: true })
     .then(() => {
       setUser(null);
     }).catch((error) => {
