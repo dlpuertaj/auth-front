@@ -126,28 +126,25 @@ function Dashboard({ user, handleLogout }) {
 }
 function App() {
   const [user, setUser] = useState(null);
-
   const handleLogout = async () => {
-    await axios.post("http://localhost:8080/api/logout",{ 
+    await axios.get(BASE_URL + "/api/logout",{ 
       withCredentials: true })
     .then(() => {
       setUser(null);
+      window.location.href = "/";
     }).catch((error) => {
       console.error("Logout failed:", error);
     });
   };
 
-return (
-  <Router>
-    <Routes>
-      <Route path="/" element={<LoginOrRegisterForm setUser={setUser} />} />
-      <Route
-        path="/dashboard"
-        element={<Dashboard user={user} handleLogout={handleLogout} />}
-      />
-    </Routes>
-  </Router>
-)
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<LoginOrRegisterForm setUser={setUser} />} />
+        <Route path="/dashboard" element={<Dashboard user={user} handleLogout={handleLogout} />} />
+      </Routes>
+    </Router>
+  )
 
 }
 
